@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50544
 File Encoding         : 65001
 
-Date: 2015-12-02 20:59:22
+Date: 2015-12-04 21:50:09
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -22,9 +22,9 @@ DROP TABLE IF EXISTS `GameType`;
 CREATE TABLE `GameType` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
-  `posterUrl` text NOT NULL,
+  `posterUrl` varchar(256) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for LiveRoom
@@ -37,17 +37,18 @@ CREATE TABLE `LiveRoom` (
   `roomDescription` text NOT NULL,
   `watchCount` int(11) unsigned zerofill DEFAULT NULL,
   `userId` int(11) NOT NULL,
-  `posterUrl` text,
+  `posterUrl` varchar(256) DEFAULT NULL,
   `gameType` int(11) NOT NULL,
-  `pushUrl` text NOT NULL,
+  `pushUrl` varchar(256) NOT NULL,
   `serverIp` varchar(64) NOT NULL,
   `createTime` datetime NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `userId` (`userId`),
   KEY `id` (`userId`),
   KEY `gameType` (`gameType`),
   CONSTRAINT `id` FOREIGN KEY (`userId`) REFERENCES `User` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `LiveRoom_ibfk_1` FOREIGN KEY (`gameType`) REFERENCES `GameType` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for Notice
@@ -57,7 +58,7 @@ CREATE TABLE `Notice` (
   `id` int(11) NOT NULL,
   `title` varchar(50) NOT NULL,
   `content` text NOT NULL,
-  `posterUrl` text NOT NULL,
+  `posterUrl` varchar(256) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -72,16 +73,29 @@ CREATE TABLE `RecordRoom` (
   `roomDescription` text NOT NULL,
   `watchCount` int(11) NOT NULL,
   `userId` int(11) NOT NULL,
-  `posterUrl` text NOT NULL,
+  `posterUrl` varchar(256) NOT NULL,
   `gameType` int(11) NOT NULL,
-  `playUrl` text NOT NULL,
+  `playUrl` varchar(256) NOT NULL,
   `createTime` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `userId` (`userId`),
   KEY `gameType` (`gameType`),
   CONSTRAINT `RecordRoom_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `User` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `RecordRoom_ibfk_2` FOREIGN KEY (`gameType`) REFERENCES `GameType` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Table structure for RtmpServer
+-- ----------------------------
+DROP TABLE IF EXISTS `RtmpServer`;
+CREATE TABLE `RtmpServer` (
+  `ip` varchar(20) NOT NULL,
+  `app` varchar(20) DEFAULT NULL,
+  `isAlive` bit(1) DEFAULT NULL,
+  `clientCount` int(11) DEFAULT NULL,
+  `URI` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`ip`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for User
@@ -93,6 +107,25 @@ CREATE TABLE `User` (
   `password` varchar(50) NOT NULL,
   `email` varchar(50) NOT NULL,
   `telephone` varchar(20) DEFAULT NULL,
-  `photoUrl` text,
+  `photoUrl` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
+DROP TRIGGER IF EXISTS `createGameTypePosterUrl`;
+DELIMITER ;;
+CREATE TRIGGER `createGameTypePosterUrl` BEFORE INSERT ON `GameType` FOR EACH ROW IF LENGTH(new.posterUrl)<1 THEN
+SET new.posterUrl = 'http://172.18.219.201/posters/default.jpg';
+END IF
+;;
+DELIMITER ;
+DROP TRIGGER IF EXISTS `createLiveRoomPosterUrl`;
+DELIMITER ;;
+CREATE TRIGGER `createLiveRoomPosterUrl` BEFORE INSERT ON `LiveRoom` FOR EACH ROW IF LENGTH(new.posterUrl)<1 THEN
+SET new.posterUrl=CONCAT('http://', new.serverIp, '/posters/', new.key , '.gif');
+END IF
+;;
+DELIMITER ;
+DROP TRIGGER IF EXISTS `createURI`;
+DELIMITER ;;
+CREATE TRIGGER `createURI` BEFORE INSERT ON `RtmpServer` FOR EACH ROW SET new.URI = CONCAT("rtmp://", new.ip, "/", new.app)
+;;
+DELIMITER ;

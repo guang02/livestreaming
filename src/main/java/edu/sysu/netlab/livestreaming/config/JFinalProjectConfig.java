@@ -14,9 +14,11 @@ import edu.sysu.netlab.livestreaming.controller.GameTypeController;
 import edu.sysu.netlab.livestreaming.controller.IndexController;
 import edu.sysu.netlab.livestreaming.controller.RoomController;
 import edu.sysu.netlab.livestreaming.controller.UserController;
+import edu.sysu.netlab.livestreaming.handler.XssHandler;
 import edu.sysu.netlab.livestreaming.model.GameType;
 import edu.sysu.netlab.livestreaming.model.LiveRoom;
 import edu.sysu.netlab.livestreaming.model.RecordRoom;
+import edu.sysu.netlab.livestreaming.model.RtmpServer;
 import edu.sysu.netlab.livestreaming.model.User;
 
 public class JFinalProjectConfig extends JFinalConfig {
@@ -51,6 +53,7 @@ public class JFinalProjectConfig extends JFinalConfig {
 		activePlugin.addMapping("LiveRoom", LiveRoom.class);
 		activePlugin.addMapping("RecordRoom", RecordRoom.class);
 		activePlugin.addMapping("GameType", GameType.class);
+		activePlugin.addMapping("RtmpServer", RtmpServer.class);
 		//---End of AR
 	}
 
@@ -60,6 +63,7 @@ public class JFinalProjectConfig extends JFinalConfig {
 
 	@Override
 	public void configHandler(Handlers me) {
+		me.add(new XssHandler("zzz"));
 	}
 	
 	@Override

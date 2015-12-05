@@ -25,13 +25,13 @@ public class LoginInterceptor implements Interceptor {
 		loginController = inv.getController();
 		try{
 			Objects.requireNonNull( loginController.getSessionAttr("userId") );
-			if(inv.getActionKey().equals("/user"))
-				loginController.redirect("/");
+
 			inv.invoke();
 			
 		} catch(NullPointerException e) {
 			//e.printStackTrace();
-			loginController.forwardAction("/user");
+			loginController.forwardAction("/");
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

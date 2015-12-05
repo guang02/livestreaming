@@ -1,13 +1,16 @@
 package edu.sysu.netlab.livestreaming.controller;
 
+import static edu.sysu.netlab.livestreaming.model.User.dao;
+
 import com.jfinal.aop.Before;
 import com.jfinal.core.Controller;
+import com.jfinal.kit.JsonKit;
 
+import edu.sysu.netlab.livestreaming.handler.XssHandler;
 import edu.sysu.netlab.livestreaming.model.User;
 import edu.sysu.netlab.livestreaming.responseApi.ResponseCode;
 import edu.sysu.netlab.livestreaming.responseApi.ResponseJson;
 import edu.sysu.netlab.livestreaming.validator.EmailValidator;
-import static edu.sysu.netlab.livestreaming.model.User.dao;
 
 /**
  * 该类包含功能有<br>
@@ -22,10 +25,10 @@ import static edu.sysu.netlab.livestreaming.model.User.dao;
  *
  */
 public class UserController extends Controller {
-	public void index() {
-		renderHtml("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=UTF-8\"></head><body><form name=\"input\" action=\"http://localhost:8080/user/login\" method=\"post\">email: <input type=\"text\" name=\"email\" />nickName: <input type=\"text\" name=\"nickName\" />password: <input type=\"text\" name=\"password\" /><input type=\"submit\" value=\"Submit\" /></form></body></html>");
-	}
 	
+	public void index() {
+		renderHtml("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=UTF-8\"></head><body><h1>注册</h1><br><form name=\"input\" action=\"/user/register\" method=\"post\">email: <input type=\"text\" name=\"email\" />nickName: <input type=\"text\" name=\"nickName\" />password: <input type=\"text\" name=\"password\" /><input type=\"submit\" value=\"Submit\" /></form></body></html>");
+	}
 	
 	/**
 	 * 注册账户<br>
@@ -36,15 +39,25 @@ public class UserController extends Controller {
 	 * @param password （密码）post
 	 * @author JoshuaShaw
 	 * @see UserController
+	 * @see XssHandler
 	 * 
 	 */
 	@Before(EmailValidator.class)
 	public void register() {
 		
-		String email = getPara("email");
-		String nickName = getPara("nickName");
-		String password = getPara("password");
-
+		String email = null;
+		String nickName = null;
+		String password = null;
+		
+		try{
+			email = getPara("email");
+			nickName = getPara("nickName");
+			password = getPara("password");
+			
+		} catch (NullPointerException e){
+			e.printStackTrace();
+		}
+		
 		ResponseJson rj = new ResponseJson();
 		
 		try {
@@ -55,7 +68,7 @@ public class UserController extends Controller {
 			  .setMessage("Email已经被注册！");
 		
 		}catch(Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			
 			User user = dao.set("email", email)
 					       .set("nickName", nickName)
@@ -105,5 +118,28 @@ public class UserController extends Controller {
 			renderJson(rj.toString());
 			
 		}
+	}
+	
+	public void me() {
+		ResponseJson rj = new ResponseJson();
+		
+		try {
+			int userId = getSessionAttr("userId");		
+			User user = User.dao.findById(userId);
+			
+			rj.setCode(ResponseCode.Success)
+			  .setData(JsonKit.toJson(user))
+			  .setMessage("获取个人信息成功！");
+			
+		} catch (Exception e) {
+			rj.setCode(ResponseCode.GeneralError)
+			  .setMessage("游客，欢迎！");
+			e.printStackTrace();
+			
+		} finally {
+			renderJson(rj.toString());
+			
+		}
+		
 	}
 }

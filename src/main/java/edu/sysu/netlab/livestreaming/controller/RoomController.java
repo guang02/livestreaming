@@ -11,14 +11,12 @@ import com.jfinal.aop.Clear;
 import com.jfinal.core.Controller;
 import com.jfinal.kit.HashKit;
 import com.jfinal.kit.JsonKit;
+import com.jfinal.plugin.activerecord.ActiveRecordException;
 
-import edu.sysu.netlab.livestreaming.heartbeat.NotAvailableServerException;
-import edu.sysu.netlab.livestreaming.heartbeat.RtmpServer;
-import edu.sysu.netlab.livestreaming.heartbeat.ServerDispatcher;
 import edu.sysu.netlab.livestreaming.interceptor.LoginInterceptor;
-import edu.sysu.netlab.livestreaming.model.GameType;
 import edu.sysu.netlab.livestreaming.model.LiveRoom;
 import edu.sysu.netlab.livestreaming.model.RecordRoom;
+import edu.sysu.netlab.livestreaming.model.RtmpServer;
 import edu.sysu.netlab.livestreaming.responseApi.ResponseCode;
 import edu.sysu.netlab.livestreaming.responseApi.ResponseJson;
 
@@ -40,10 +38,8 @@ import edu.sysu.netlab.livestreaming.responseApi.ResponseJson;
 @Before(LoginInterceptor.class)
 public class RoomController extends Controller {
 	
-	private static ServerDispatcher sd = ServerDispatcher.self();
-	
 	public void index() {
-		renderHtml("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=UTF-8\"></head><body><form name=\"input\" action=\"http://localhost:8080/room/registerLiveRoom\" method=\"post\">roomName: <input type=\"text\" name=\"roomName\" />roomDescription: <input type=\"textarea\" name=\"roomDescription\" />gameType: <input type=\"text\" name=\"gameType\" /><input type=\"submit\" value=\"Submit\" /></form></body></html>");
+		renderHtml("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=UTF-8\"></head><body><h1>创建房间</h1><br><form name=\"input\" action=\"./room/registerLiveRoom\" method=\"post\">roomName: <input type=\"text\" name=\"roomName\" />roomDescription: <input type=\"textarea\" name=\"roomDescription\" />gameType: <input type=\"text\" name=\"gameType\" /><input type=\"submit\" value=\"Submit\" /></form></body></html>");
 	}
 	
 	/**
@@ -72,10 +68,7 @@ public class RoomController extends Controller {
 		
 		//构建发布密钥publish key
 		StringBuilder preKey = new StringBuilder();
-		preKey.append(userId)
-		      .append(roomName)
-		      .append(gameType)
-		      .append(date);
+		preKey.append(userId).append(roomName).append(gameType).append(date);
 		String key = HashKit.sha256(preKey.toString());
 		
 		//获取可用的RTMP服务器
@@ -84,9 +77,9 @@ public class RoomController extends Controller {
 		try {
 			//一般来说，该方法不会抛出异常
 			publisherIp = InetAddress.getByName(ip);	
-			RtmpServer<InetAddress, LiveRoom> server = sd.requestForServer(publisherIp);
-			String pushUrl = server.getURI().toString();
-			String serverIp = server.getServerIp().toString();
+			RtmpServer server = RtmpServer.getRtmpServer();
+			String serverIp = server.getStr("ip");
+			String pushUrl = server.getStr("pushUrl");
 			String posterUrl = new StringBuilder().append("http://")
 					                              .append(serverIp)
 					                              .append("/posters/")
@@ -108,7 +101,6 @@ public class RoomController extends Controller {
 			liveRoom.save();
 			Long id = liveRoom.getLong("id");
 			key = liveRoom.get("key");		
-			server.addClient(publisherIp, liveRoom);
 		
 			rj.setCode(ResponseCode.Success)
 			  .setData(JsonKit.toJson(liveRoom))
@@ -119,9 +111,19 @@ public class RoomController extends Controller {
 			  .setMessage("您的IP地址异常！");
 			e.printStackTrace();
 			
-		} catch (NotAvailableServerException e) {
+		} catch (ActiveRecordException e) {
+			rj.setCode(ResponseCode.GeneralError)
+			  .setMessage("已经有属于你的直播房间！");
+			e.printStackTrace();
+			
+		} catch (NullPointerException e) {
+			rj.setCode(ResponseCode.PostDataError)
+			  .setMessage("post数据有误！");
+			e.printStackTrace();
+			
+		} catch (Exception e) {
 			rj.setCode(ResponseCode.RtmpServerError)
-			  .setMessage("RTMP服务器内部错误！");
+			  .setMessage("RTMP服务器有误！");
 			e.printStackTrace();
 			
 		} finally {
@@ -151,7 +153,7 @@ public class RoomController extends Controller {
 	
 	/**
 	 * 保存直播录像<br>
-	 * 
+	 * <br>
 	 * @param id （直播房间ID）
 	 * @author JoshuaShaw
 	 * @see RoomController
@@ -160,8 +162,9 @@ public class RoomController extends Controller {
 		
 		ResponseJson rj = new ResponseJson();
 		
-		int id = getParaToInt("id");
-		LiveRoom liveRoom = LiveRoom.dao.findById(id);
+		String sql = "select * from LiveRoom where userId=?";
+		int userId = getSessionAttr("userId");
+		LiveRoom liveRoom = LiveRoom.dao.findFirst(sql, userId);
 			
 		try {
 			RecordRoom.dao.fromLiveRoom(liveRoom);
@@ -176,5 +179,27 @@ public class RoomController extends Controller {
 		} finally {
 			renderJson(rj.toString());
 		}
+	}
+
+	/**
+	 *  查找自己创建的直播房间详细信息<br>
+	 *  <br>
+	 *  
+	 *  @author JoshuaShaw
+	 *  @see RoomController
+	 */
+	public void liveRoom() {
+		ResponseJson rj = new ResponseJson();
+		
+		int userId = getSessionAttr("userId");
+		String sql = "select * from LiveRoom where userId=?";
+		LiveRoom liveRoom = LiveRoom.dao.findFirst(sql, userId);
+		
+		rj.setCode(ResponseCode.Success)
+		  .setData(JsonKit.toJson(liveRoom))
+		  .setMessage("获取成功！");
+		
+		renderJson(rj.toString());
+		
 	}
 }
