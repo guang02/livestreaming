@@ -10,7 +10,7 @@ public class ResponseJson {
 		result = new JSONObject();
 		
 		setCode(ResponseCode.Success);
-		setData(new Object());
+		setData(new JSONObject());
 		setMessage("");
 	}
 	

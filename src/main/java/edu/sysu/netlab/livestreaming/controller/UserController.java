@@ -4,7 +4,6 @@ import static edu.sysu.netlab.livestreaming.model.User.dao;
 
 import com.jfinal.aop.Before;
 import com.jfinal.core.Controller;
-import com.jfinal.kit.JsonKit;
 
 import edu.sysu.netlab.livestreaming.handler.XssHandler;
 import edu.sysu.netlab.livestreaming.model.User;
@@ -45,20 +44,12 @@ public class UserController extends Controller {
 	@Before(EmailValidator.class)
 	public void register() {
 		
-		String email = null;
-		String nickName = null;
-		String password = null;
-		
-		try{
-			email = getPara("email");
-			nickName = getPara("nickName");
-			password = getPara("password");
-			
-		} catch (NullPointerException e){
-			e.printStackTrace();
-		}
-		
 		ResponseJson rj = new ResponseJson();
+		
+		String email = getPara("email");
+		String nickName = getPara("nickName");
+		String password = getPara("password");
+				
 		
 		try {
 			String sql = "select * from User where email=?";
@@ -128,7 +119,7 @@ public class UserController extends Controller {
 			User user = User.dao.findById(userId);
 			
 			rj.setCode(ResponseCode.Success)
-			  .setData(JsonKit.toJson(user))
+			  .setData(user.toJson())
 			  .setMessage("获取个人信息成功！");
 			
 		} catch (Exception e) {

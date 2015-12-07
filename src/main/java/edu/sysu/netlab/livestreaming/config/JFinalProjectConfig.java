@@ -14,6 +14,7 @@ import edu.sysu.netlab.livestreaming.controller.GameTypeController;
 import edu.sysu.netlab.livestreaming.controller.IndexController;
 import edu.sysu.netlab.livestreaming.controller.RoomController;
 import edu.sysu.netlab.livestreaming.controller.UserController;
+import edu.sysu.netlab.livestreaming.handler.CrossFleidHandler;
 import edu.sysu.netlab.livestreaming.handler.XssHandler;
 import edu.sysu.netlab.livestreaming.model.GameType;
 import edu.sysu.netlab.livestreaming.model.LiveRoom;
@@ -63,6 +64,7 @@ public class JFinalProjectConfig extends JFinalConfig {
 
 	@Override
 	public void configHandler(Handlers me) {
+		me.add(new CrossFleidHandler());
 		me.add(new XssHandler("zzz"));
 	}
 	

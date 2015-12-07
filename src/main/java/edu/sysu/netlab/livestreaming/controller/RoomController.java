@@ -6,12 +6,15 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
+import com.google.common.base.Objects;
 import com.jfinal.aop.Before;
 import com.jfinal.aop.Clear;
 import com.jfinal.core.Controller;
 import com.jfinal.kit.HashKit;
 import com.jfinal.kit.JsonKit;
 import com.jfinal.plugin.activerecord.ActiveRecordException;
+import com.jfinal.plugin.activerecord.Db;
+import com.jfinal.plugin.activerecord.Record;
 
 import edu.sysu.netlab.livestreaming.interceptor.LoginInterceptor;
 import edu.sysu.netlab.livestreaming.model.LiveRoom;
@@ -26,6 +29,8 @@ import edu.sysu.netlab.livestreaming.responseApi.ResponseJson;
  * 1. 获取直播房间列表<br>
  * 2. 已登录的用户注册一个直播房间<br>
  * 3. 保存直播录像<br>
+ * 4. 查看所有录像<br>
+ * 5. 查看自己的录像<br>
  * <br>
  * 注意事项：<br>
  * 1. 除获取直播列表（1）外的其他功能均需要在登录后使用<br>
@@ -37,9 +42,12 @@ import edu.sysu.netlab.livestreaming.responseApi.ResponseJson;
  */
 @Before(LoginInterceptor.class)
 public class RoomController extends Controller {
+	final static int PAGE_SIZE = 12;
+	
+	
 	
 	public void index() {
-		renderHtml("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=UTF-8\"></head><body><h1>创建房间</h1><br><form name=\"input\" action=\"./room/registerLiveRoom\" method=\"post\">roomName: <input type=\"text\" name=\"roomName\" />roomDescription: <input type=\"textarea\" name=\"roomDescription\" />gameType: <input type=\"text\" name=\"gameType\" /><input type=\"submit\" value=\"Submit\" /></form></body></html>");
+		renderHtml("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=UTF-8\"></head><body><h1>创建房间</h1><br><form name=\"input\" action=\"/room/register\" method=\"post\">roomName: <input type=\"text\" name=\"roomName\" />roomDescription: <input type=\"textarea\" name=\"roomDescription\" />gameType: <input type=\"text\" name=\"gameType\" /><input type=\"submit\" value=\"Submit\" /></form></body></html>");
 	}
 	
 	/**
@@ -53,7 +61,7 @@ public class RoomController extends Controller {
 	 * @author JoshuaShaw
 	 * @see RoomController
 	 */
-	public void registerLiveRoom() {
+	public void register() {
 		
 		//构造响应json
 		ResponseJson rj = new ResponseJson();
@@ -73,10 +81,11 @@ public class RoomController extends Controller {
 		
 		//获取可用的RTMP服务器
 		String ip = getRequest().getRemoteAddr();
-		InetAddress publisherIp;
+
 		try {
 			//一般来说，该方法不会抛出异常
-			publisherIp = InetAddress.getByName(ip);	
+			@SuppressWarnings("unused")
+			InetAddress publisherIp = InetAddress.getByName(ip);	
 			RtmpServer server = RtmpServer.getRtmpServer();
 			String serverIp = server.getStr("ip");
 			String pushUrl = server.getStr("pushUrl");
@@ -99,7 +108,6 @@ public class RoomController extends Controller {
 							            .set("serverIp", serverIp)
 							            .set("createTime", createTime);
 			liveRoom.save();
-			Long id = liveRoom.getLong("id");
 			key = liveRoom.get("key");		
 		
 			rj.setCode(ResponseCode.Success)
@@ -134,19 +142,28 @@ public class RoomController extends Controller {
 	/**
 	 * 获取直播房间列表<br>
 	 * <br>
+	 * 
+	 * @param page 页码。可选的，不传递该参数时默认为1
 	 * @author JoshuaShaw
 	 * @see RoomController
 	 */
 	@Clear(LoginInterceptor.class)
 	public void liveRooms() {
-		String sql = "select * from LiveRoom";
-		List<LiveRoom> liveRooms = LiveRoom.dao.find(sql);
-		
 		ResponseJson rj = new ResponseJson();
+		
+		String select = "SELECT LR.`key`, LR.roomName, LR.watchCount, LR.posterUrl, LR.pushUrl, LR.createTime, GT.`name` as gameTypeName, U.nickName";
+		String sqlExceptSelect = "from LiveRoom as LR, GameType as GT, `User` as U WHERE LR.gameType=GT.id and LR.userId=U.id";
+		
+		//没有page的话，默认page=1
+		Integer page = (page=getParaToInt("page")) != null ? page:1;
+		
+		List<Record> liveRooms = Db.paginate(page, PAGE_SIZE, select, sqlExceptSelect)
+				                 .getList();
+
 		
 		rj.setCode(ResponseCode.Success)
 		  .setData(JsonKit.toJson( liveRooms ))
-		  .setMessage("获取直播房间成功！");
+		  .setMessage("获取录像房间成功！");
 		
 		renderJson(rj.toString());
 	}
@@ -154,11 +171,10 @@ public class RoomController extends Controller {
 	/**
 	 * 保存直播录像<br>
 	 * <br>
-	 * @param id （直播房间ID）
 	 * @author JoshuaShaw
 	 * @see RoomController
 	 */
-	public void liveRoomToRecordRoom() {
+	public void save() {
 		
 		ResponseJson rj = new ResponseJson();
 		
@@ -183,8 +199,7 @@ public class RoomController extends Controller {
 
 	/**
 	 *  查找自己创建的直播房间详细信息<br>
-	 *  <br>
-	 *  
+	 *  <br> 
 	 *  @author JoshuaShaw
 	 *  @see RoomController
 	 */
@@ -202,4 +217,61 @@ public class RoomController extends Controller {
 		renderJson(rj.toString());
 		
 	}
+	
+	/**
+	 * 查看全部录像<br>
+	 * <br>
+	 * @param page 页码。可选的，不传递该参数时默认为1
+	 * @author JoshuaShaw
+	 * @see RoomController
+	 */
+	@Clear(LoginInterceptor.class)
+	public void recordRooms() throws Exception{
+
+		ResponseJson rj = new ResponseJson();
+		
+		String select = "SELECT RR.key, RR.roomName, RR.watchCount, RR.posterUrl, RR.playUrl, RR.createTime, GT.`name` as gameTypeName, U.nickName";
+		String sqlExceptSelect = "from RecordRoom as RR, GameType as GT, `User` as U WHERE RR.gameType=GT.id and RR.userId=U.id";
+		
+		//没有page的话，默认page=1
+		Integer page = (page=getParaToInt("page")) != null ? page:1;
+		
+		List<Record> recordRooms = Db.paginate(page, PAGE_SIZE, select, sqlExceptSelect)
+				                 .getList();
+
+		
+		rj.setCode(ResponseCode.Success)
+		  .setData(JsonKit.toJson( recordRooms ))
+		  .setMessage("获取录像房间成功！");
+		
+		renderJson(rj.toString());
+	}
+	
+	/**
+	 * 查看自己的录像<br>
+	 * <br>
+	 * @param page 页码。可选的，不传递该参数时默认为1
+	 * @author JoshuaShaw
+	 * @see RoomController
+	 */
+	public void recordRoom() {
+		ResponseJson rj = new ResponseJson();
+		
+		int userId = getSessionAttr("userId");
+		String select = "SELECT RR.key, RR.roomName, RR.watchCount, RR.posterUrl, RR.playUrl, RR.createTime, GT.`name` as gameTypeName";
+		String sqlExceptSelect = "from RecordRoom as RR, GameType as GT WHERE RR.gameType=GT.id and userId = ?";
+	
+		//没有page的话，默认page=1
+		Integer page = (page=getParaToInt("page")) != null ?page:1;
+		
+		List<Record> records = Db.paginate(page, PAGE_SIZE, select, sqlExceptSelect, userId)
+				                 .getList();
+		
+		rj.setCode(ResponseCode.Success)
+		  .setData(JsonKit.toJson(records))
+		  .setMessage("获取自己的录像房间成功！");
+		
+		renderJson(rj.toString());
+	}
+	
 }

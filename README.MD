@@ -4,7 +4,8 @@
 # 响应JSON
 
 - ## code
- 描述调用的api返回结果的初略描述。
+ 描述调用的api返回结果的初略描述。   
+
 
   | 代码   | 描述       |
   |:------:|:----------:|
@@ -44,14 +45,16 @@
  - 不需get数据
 
 - ## 注册房间
- - url：*./room/registerRoom*
+ - url：*./room/register*
  - 参见*url：./room*
  - 需要post数据
 
 - ## 保存录像
- - url：*./room/liveRoomToRecordRoom*
+ - url：*./room/save*
  - 由于用户只能创建一个直播房间，可以唯一确定其直播房间
  - 不需要get数据
+
+
 
 - ## 获取游戏类型列表
  - url：*./gameType*
