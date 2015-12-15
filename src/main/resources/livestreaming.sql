@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50544
 File Encoding         : 65001
 
-Date: 2015-12-05 17:04:00
+Date: 2015-12-14 13:07:42
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -24,12 +24,7 @@ CREATE TABLE `GameType` (
   `name` varchar(50) NOT NULL,
   `posterUrl` varchar(256) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Records of GameType
--- ----------------------------
-INSERT INTO `GameType` VALUES ('1', '主机游戏', 'http://172.18.219.201/posters/default.jpg');
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for LiveRoom
@@ -53,11 +48,7 @@ CREATE TABLE `LiveRoom` (
   KEY `gameType` (`gameType`),
   CONSTRAINT `id` FOREIGN KEY (`userId`) REFERENCES `User` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `LiveRoom_ibfk_1` FOREIGN KEY (`gameType`) REFERENCES `GameType` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Records of LiveRoom
--- ----------------------------
+) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for Notice
@@ -70,10 +61,6 @@ CREATE TABLE `Notice` (
   `posterUrl` varchar(256) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Records of Notice
--- ----------------------------
 
 -- ----------------------------
 -- Table structure for RecordRoom
@@ -95,12 +82,7 @@ CREATE TABLE `RecordRoom` (
   KEY `gameType` (`gameType`),
   CONSTRAINT `RecordRoom_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `User` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `RecordRoom_ibfk_2` FOREIGN KEY (`gameType`) REFERENCES `GameType` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Records of RecordRoom
--- ----------------------------
-INSERT INTO `RecordRoom` VALUES ('10', '99106813fd2c23e1a9f59352f2bff587ca07658b66d1cfd2a7d18fc3d552eabc', '撒野', '这是第一间直播房间', '0', '12', 'http://172.18.219.201/posters/99106813fd2c23e1a9f59352f2bff587ca07658b66d1cfd2a7d18fc3d552eabc.gif', '1', 'rtmp://172.18.219.201/videos/', '2015-12-05 16:59:30');
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for RtmpServer
@@ -116,11 +98,6 @@ CREATE TABLE `RtmpServer` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
--- Records of RtmpServer
--- ----------------------------
-INSERT INTO `RtmpServer` VALUES ('172.18.219.201', 'hls', null, null, 'rtmp://172.18.219.201/hls');
-
--- ----------------------------
 -- Table structure for User
 -- ----------------------------
 DROP TABLE IF EXISTS `User`;
@@ -132,12 +109,7 @@ CREATE TABLE `User` (
   `telephone` varchar(20) DEFAULT NULL,
   `photoUrl` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Records of User
--- ----------------------------
-INSERT INTO `User` VALUES ('12', '游戏达人', '123456', '455532734@qq.com', null, 'http://172.18.219.201/photos/default.jpg');
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8;
 DROP TRIGGER IF EXISTS `createGameTypePosterUrl`;
 DELIMITER ;;
 CREATE TRIGGER `createGameTypePosterUrl` BEFORE INSERT ON `GameType` FOR EACH ROW IF LENGTH(new.posterUrl)<1 THEN
@@ -148,7 +120,7 @@ DELIMITER ;
 DROP TRIGGER IF EXISTS `createLiveRoomPosterUrl`;
 DELIMITER ;;
 CREATE TRIGGER `createLiveRoomPosterUrl` BEFORE INSERT ON `LiveRoom` FOR EACH ROW IF LENGTH(new.posterUrl)<1 THEN
-SET new.posterUrl=CONCAT('http://', new.serverIp, '/posters/', new.key , '.gif');
+SET new.posterUrl=CONCAT('http://', new.serverIp, '/live/posters/', new.key , '.gif');
 END IF
 ;;
 DELIMITER ;

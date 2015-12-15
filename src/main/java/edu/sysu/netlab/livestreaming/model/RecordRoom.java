@@ -2,6 +2,7 @@ package edu.sysu.netlab.livestreaming.model;
 
 import com.jfinal.plugin.activerecord.Model;
 
+
 public class RecordRoom extends Model<RecordRoom> {
 	public static final RecordRoom dao = new RecordRoom();
 	

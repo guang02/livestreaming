@@ -13,6 +13,7 @@ public class CrossFleidHandler extends Handler {
 		response.setCharacterEncoding("UTF8");
 		response.setContentType("text/html;charset=UTF-8");		
         response.addHeader("Access-Control-Allow-Origin", "*");
+        response.addHeader("Access-Control-Allow-Credentials", "true");
         nextHandler.handle(target, request, response, isHandled);
 
 	}

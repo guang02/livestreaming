@@ -5,6 +5,7 @@ import java.util.Random;
 
 import com.jfinal.plugin.activerecord.Model;
 
+
 public class RtmpServer extends Model<RtmpServer> {
 	public static RtmpServer dao = new RtmpServer(); 
 	

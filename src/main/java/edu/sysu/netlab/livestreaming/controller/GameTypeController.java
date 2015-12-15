@@ -11,7 +11,7 @@ import edu.sysu.netlab.livestreaming.responseApi.ResponseJson;
 
 public class GameTypeController extends Controller {
 
-	public void index() throws Exception{
+	public void index() throws Exception {
 		String sql = "select * from GameType";
 		List<GameType> gameTypes = GameType.dao.find(sql);
 		

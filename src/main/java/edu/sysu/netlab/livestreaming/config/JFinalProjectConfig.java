@@ -12,10 +12,13 @@ import com.jfinal.plugin.druid.DruidPlugin;
 
 import edu.sysu.netlab.livestreaming.controller.GameTypeController;
 import edu.sysu.netlab.livestreaming.controller.IndexController;
-import edu.sysu.netlab.livestreaming.controller.RoomController;
+import edu.sysu.netlab.livestreaming.controller.LiveRoomController;
+import edu.sysu.netlab.livestreaming.controller.RecordRoomController;
+import edu.sysu.netlab.livestreaming.controller.RtmpServerController;
 import edu.sysu.netlab.livestreaming.controller.UserController;
 import edu.sysu.netlab.livestreaming.handler.CrossFleidHandler;
 import edu.sysu.netlab.livestreaming.handler.XssHandler;
+import edu.sysu.netlab.livestreaming.interceptor.ExceptionInterceptor;
 import edu.sysu.netlab.livestreaming.model.GameType;
 import edu.sysu.netlab.livestreaming.model.LiveRoom;
 import edu.sysu.netlab.livestreaming.model.RecordRoom;
@@ -33,8 +36,10 @@ public class JFinalProjectConfig extends JFinalConfig {
 	public void configRoute(Routes me) {
 		me.add("/", IndexController.class);
 		me.add("/user", UserController.class);
-		me.add("/room", RoomController.class);
+		me.add("/live", LiveRoomController.class);
+		me.add("/record", RecordRoomController.class);
 		me.add("/gameType", GameTypeController.class);
+		me.add("/check", RtmpServerController.class);
 		
 	}
 
@@ -60,6 +65,7 @@ public class JFinalProjectConfig extends JFinalConfig {
 
 	@Override
 	public void configInterceptor(Interceptors me) {
+		me.add(new ExceptionInterceptor());
 	}
 
 	@Override
@@ -73,7 +79,7 @@ public class JFinalProjectConfig extends JFinalConfig {
 	}
 	
 	public static void main(String[] args) {
-		JFinal.start("src/main/webapp", 8080, "/", 5);
+		JFinal.start("src/main/webapp", 8081, "/", 5);
 	}
 		
 }

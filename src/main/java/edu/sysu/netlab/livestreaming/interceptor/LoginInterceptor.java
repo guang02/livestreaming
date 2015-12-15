@@ -29,8 +29,8 @@ public class LoginInterceptor implements Interceptor {
 			inv.invoke();
 			
 		} catch(NullPointerException e) {
-			//e.printStackTrace();
-			loginController.forwardAction("/");
+			e.printStackTrace();
+			loginController.redirect("/");
 			
 		} catch (Exception e) {
 			e.printStackTrace();
