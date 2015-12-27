@@ -20,7 +20,7 @@ public class LoginInterceptor implements Interceptor {
 	
 	public LoginInterceptor() {}
 	
-	@Override
+
 	public void intercept(Invocation inv) {
 		loginController = inv.getController();
 		try{

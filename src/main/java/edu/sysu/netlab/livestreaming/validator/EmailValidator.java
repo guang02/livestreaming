@@ -24,7 +24,7 @@ public class EmailValidator extends Validator {
 	protected void handleError(Controller c) {
 		ResponseJson rj = new ResponseJson().setCode(ResponseCode.PostDataError);
 		
-		rj.setMessage( c.getAttr("emailMsg") );
+		rj.setMessage( (String) c.getAttr("emailMsg") );
 		c.renderJson(rj.toString());	
 	}
 

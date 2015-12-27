@@ -21,13 +21,6 @@ import edu.sysu.netlab.livestreaming.validator.EmailValidator;
 public class UserController extends Controller {
 	
 	/**
-	 * 由于调试，部署时删除
-	 */
-	public void index() throws Exception {
-		renderHtml("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=UTF-8\"></head><body><h1>注册</h1><br><form name=\"input\" action=\"./user/register\" method=\"post\">email: <input type=\"text\" name=\"email\" />nickName: <input type=\"text\" name=\"nickName\" />password: <input type=\"text\" name=\"password\" /><input type=\"submit\" value=\"Submit\" /></form></body></html>");
-	}
-	
-	/**
 	 * 注册账户
 	 * @param email 邮箱
 	 * @param nickName 用户昵称
@@ -55,7 +48,8 @@ public class UserController extends Controller {
 					       .set("nickName", nickName)
 					       .set("password", password);		
 			user.save();		
-			setSessionAttr("userId", user.get("id"));			
+			setSessionAttr("userId", user.get("id"));	
+			getSession().setMaxInactiveInterval(2*60*60);
 			rj.setCode(ResponseCode.Success)
 			  .setMessage("注册成功！");			
 		} finally {

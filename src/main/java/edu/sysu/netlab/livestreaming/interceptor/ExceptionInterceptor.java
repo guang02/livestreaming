@@ -8,7 +8,6 @@ public class ExceptionInterceptor implements Interceptor {
 
 	private static final Logger lOGGER = Logger.getLogger(LoginInterceptor.class);
 	
-	@Override
 	public void intercept(Invocation inv) {
 		try {
 			inv.invoke();

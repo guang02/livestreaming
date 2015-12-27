@@ -22,7 +22,7 @@ public class DecodeURIHandler extends Handler {
 		 */
 		Map<String, String[]> maps = request.getParameterMap();
 		for(Map.Entry<String, String[]> entry : maps.entrySet()) {
-			List<String> list = new ArrayList<>();
+			List<String> list = new ArrayList<String>();
 			for(String para : entry.getValue()) {
 				try {
 					String result = URLDecoder.decode(para, "UTF-8");
